@@ -1,10 +1,11 @@
 import sys
 import pygame
-
+from time import sleep
 from settings import Settings
 from ship import Ship
 from alien import Alien
 from bullet import Bullet
+from game_stats import Stats
 
 class AlienInvasion():
     def __init__(self):
@@ -13,7 +14,7 @@ class AlienInvasion():
 
         self.screen = pygame.display.set_mode((self.settings.screen_width,self.settings.screen_height))
         pygame.display.set_caption('Inwazja Kosmitów')
-
+        self.stats = Stats(self)
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
@@ -26,6 +27,7 @@ class AlienInvasion():
             self.update_screen()
             self.ship.update()
             self.update_bullets()
+            self.update_aliens()
             self.update_screen()
 
     def check_events(self):
@@ -36,6 +38,7 @@ class AlienInvasion():
                 self.check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self.check_keyup_events(event)
+
     def check_keydown_events(self,event):
         if event.key == pygame.K_RIGHT:
             self.ship.moving_right = True
@@ -70,6 +73,20 @@ class AlienInvasion():
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
+        self.check_bullet_alien_collision()
+
+    def update_aliens(self):
+        self.aliens.update()
+        if pygame.sprite.spritecollideany(self.ship,self.aliens):
+            self.ship_hit()
+
+        if pygame.sprite.spritecollideany(self.ship,self.aliens):
+            print(f'Statek został zestrzelony!!!')
+        self.check_aliens_bottom()
+    def check_bullet_alien_collision(self):
+        collision = pygame.sprite.groupcollide(self.bullets,self.aliens,True,True) # False, True jak ma być super pocisk
+        if not self.aliens:
+            self.create_fleet()
 
     def create_fleet(self):
         alien = Alien(self)
@@ -92,6 +109,28 @@ class AlienInvasion():
         alien.rect.x = alien.x
         alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
         self.aliens.add(alien)
+
+    def ship_hit(self):
+        if self.stats.ship_left > 0:
+            self.stats.ship_left -= 1
+
+            self.aliens.empty()
+            self.bullets.empty()
+
+            self.create_fleet()
+            self.ship.center_ship()
+
+            sleep(0.5)
+        else:
+            self.stats.game_active = False
+            sys.exit() #do zmiany
+
+    def check_aliens_bottom(self):
+        screen_rect = self.screen.get_rect()
+        for alien in self.aliens.sprites():
+            if alien.rect.bottom >= screen_rect.bottom:
+                self.ship_hit()
+                break
 
     def update_screen(self):
         self.screen.fill(self.settings.bg_color)
