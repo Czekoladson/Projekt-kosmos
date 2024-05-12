@@ -6,6 +6,7 @@ from ship import Ship
 from alien import Alien
 from bullet import Bullet
 from game_stats import Stats
+from start_button import Button
 
 class AlienInvasion():
     def __init__(self):
@@ -20,6 +21,7 @@ class AlienInvasion():
         self.aliens = pygame.sprite.Group()
 
         self.create_fleet()
+        self.create_button = Button(self,self.screen,"Gra")
 
     def run_game(self):
         while True:
@@ -38,7 +40,25 @@ class AlienInvasion():
                 self.check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self.check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self.check_play_button(mouse_pos)
 
+    def check_play_button(self,mouse_pos):
+        button_clicked = self.create_button.rect.collidepoint(mouse_pos)
+        if button_clicked and not self.stats.game_active:
+            self.settings.initialize_dynamic_settings()
+            self.stats.reset_stats()
+            if self.create_button.rect.collidepoint(mouse_pos):
+                self.stats.reset_stats()
+                self.stats.game_active = True
+
+            self.aliens.empty()
+            self.bullets.empty()
+
+            self.create_fleet()
+            self.ship.center_ship()
+            pygame.mouse.set_visible(False)
     def check_keydown_events(self,event):
         if event.key == pygame.K_RIGHT:
             self.ship.moving_right = True
@@ -50,6 +70,16 @@ class AlienInvasion():
             self.ship.moving_down = True
         elif event.key == pygame.K_SPACE:
             self.fire_bullets()
+        elif event.key == pygame.K_g:
+            self.stats.game_active
+            self.stats.reset_stats()
+            self.stats.reset_stats()
+            self.stats.game_active = True
+            self.aliens.empty()
+            self.bullets.empty()
+
+            self.create_fleet()
+            self.ship.center_ship()
         elif event.key == pygame.K_ESCAPE:
             sys.exit()
 
@@ -86,8 +116,9 @@ class AlienInvasion():
     def check_bullet_alien_collision(self):
         collision = pygame.sprite.groupcollide(self.bullets,self.aliens,True,True) # False, True jak ma być super pocisk
         if not self.aliens:
+            self.bullets.empty()
             self.create_fleet()
-
+            self.settings.increase_speed()  # cóś nie działa
     def create_fleet(self):
         alien = Alien(self)
         alien_width,alien_height = alien.rect.size
@@ -138,7 +169,8 @@ class AlienInvasion():
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
-
+        if not self.stats.game_active:
+            self.create_button.draw_button()
         pygame.display.flip()
 
 if __name__ == '__main__':
