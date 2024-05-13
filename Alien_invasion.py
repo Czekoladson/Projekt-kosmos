@@ -7,6 +7,7 @@ from alien import Alien
 from bullet import Bullet
 from game_stats import Stats
 from start_button import Button
+from scoreboard import Scoreboard
 
 class AlienInvasion():
     def __init__(self):
@@ -15,7 +16,9 @@ class AlienInvasion():
 
         self.screen = pygame.display.set_mode((self.settings.screen_width,self.settings.screen_height))
         pygame.display.set_caption('Inwazja Kosmitów')
+
         self.stats = Stats(self)
+        self.scoreboard = Scoreboard(self)
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
@@ -49,9 +52,8 @@ class AlienInvasion():
         if button_clicked and not self.stats.game_active:
             self.settings.initialize_dynamic_settings()
             self.stats.reset_stats()
-            if self.create_button.rect.collidepoint(mouse_pos):
-                self.stats.reset_stats()
-                self.stats.game_active = True
+            self.stats.game_active = True
+            self.scoreboard.prep_score()
 
             self.aliens.empty()
             self.bullets.empty()
@@ -71,7 +73,6 @@ class AlienInvasion():
         elif event.key == pygame.K_SPACE:
             self.fire_bullets()
         elif event.key == pygame.K_g:
-            self.stats.game_active
             self.stats.reset_stats()
             self.stats.reset_stats()
             self.stats.game_active = True
@@ -119,6 +120,10 @@ class AlienInvasion():
             self.bullets.empty()
             self.create_fleet()
             self.settings.increase_speed()  # cóś nie działa
+        if collision:
+            for aliens in collision.values():
+                self.stats.score += self.settings.points_for_alien_shot * len(aliens)
+                self.scoreboard.prep_score()
     def create_fleet(self):
         alien = Alien(self)
         alien_width,alien_height = alien.rect.size
@@ -169,6 +174,7 @@ class AlienInvasion():
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
+        self.scoreboard.show_score()
         if not self.stats.game_active:
             self.create_button.draw_button()
         pygame.display.flip()
