@@ -60,6 +60,7 @@ class AlienInvasion():
 
             self.create_fleet()
             self.ship.center_ship()
+            self.scoreboard.prep_ships()
             pygame.mouse.set_visible(False)
     def check_keydown_events(self,event):
         if event.key == pygame.K_RIGHT:
@@ -149,6 +150,7 @@ class AlienInvasion():
     def ship_hit(self):
         if self.stats.ship_left > 0:
             self.stats.ship_left -= 1
+            self.scoreboard.prep_ships()
 
             self.aliens.empty()
             self.bullets.empty()

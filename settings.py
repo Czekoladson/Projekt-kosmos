@@ -20,6 +20,7 @@ class Settings():
         self.speedup_scale = 1.1
         self.score_scale = 1.5
         self.points_for_alien_shot = 50
+        self.ship_number = 3
         self.initialize_dynamic_settings()
 
     def initialize_dynamic_settings(self):
